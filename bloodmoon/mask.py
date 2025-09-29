@@ -18,7 +18,6 @@ from typing import Callable
 import numpy as np
 import numpy.typing as npt
 from scipy.signal import correlate
-from toolz.curried import get_in
 
 from .coords import pos2shift
 from .images import _interp
@@ -134,7 +133,12 @@ class CodedMaskCamera:
     get_decoder: Callable[[], npt.NDArray]
     get_bulk: Callable[[], npt.NDArray]
     specs: CodedMaskSpecs
-    upscale_f: UpscaleFactor
+    upscale_x: int = 1
+    upscale_y: int = 1
+
+    @cached_property
+    def upscale_f(self):
+        return UpscaleFactor(x=self.upscale_x, y=self.upscale_y)
 
     @cached_property
     def shape_detector(self) -> tuple[int, int]:
@@ -309,7 +313,8 @@ def codedmask(
             get_decoder=get_decoder,
             get_bulk=get_bulk,
             specs=specs,
-            upscale_f=UpscaleFactor(x=upscale_x, y=upscale_y),
+            upscale_x=upscale_x,
+            upscale_y=upscale_y,
         )
     raise NotImplementedError("Only reading masks from fits file is supported.")
 
