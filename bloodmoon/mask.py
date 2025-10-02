@@ -366,9 +366,9 @@ def solid_angle(
     distance: float,
 ) -> npt.NDArray:
     """
-    Computes the solid angle covered by a rectangular plate of physical
-    dimension `width` X `height` at a given `distance` from an observer
-    located at `(x, y)` wrt the plate bottom-left corner.
+    Computes the solid angle subtended by a rectangular mask, given its
+    physical width and height, as observed from a detector element
+    located at coordinates (x, y).
 
                         |-------- width --------|
                                 |
@@ -451,7 +451,7 @@ def solid_angle(
     return sum(omega) / len(omega)
 
 
-def detector_solid_angle(camera: CodedMaskCamera) -> npt.NDArray:
+def solid_angle_profile(camera: CodedMaskCamera) -> npt.NDArray:
     """
     Computes the sky solid angle profile seen by each active element
     of the coded-mask camera detector.
@@ -526,7 +526,7 @@ def variance(
     # - the expected counts array `lambda` can be built as the product between
     #   a normalised matrix `omega` representing the solid angle seen by each
     #   active pixel; and the total observed detector counts (i.e., `sum_det`)
-    omega = detector_solid_angle(camera)
+    omega = solid_angle_profile(camera)
     lambda_ = sum_det * omega / omega.sum()
 
     # balanced variance components
