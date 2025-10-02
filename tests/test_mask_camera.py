@@ -7,7 +7,7 @@ from bloodmoon.mask import codedmask
 from bloodmoon.mask import decode
 from bloodmoon.mask import encode
 from bloodmoon.mask import psf
-from bloodmoon.mask import sky_variance
+from bloodmoon.mask import variance
 
 
 class TestWFM(unittest.TestCase):
@@ -42,7 +42,7 @@ class TestWFM(unittest.TestCase):
     def test_decode_shape(self):
         detector = np.zeros(self.wfm.shape_detector)
         cc = decode(self.wfm, detector)
-        var = sky_variance(self.wfm, detector)
+        var = variance(self.wfm, detector)
         self.assertEqual(cc.shape, self.wfm.shape_sky)
         self.assertEqual(var.shape, self.wfm.shape_sky)
 

@@ -495,7 +495,7 @@ def detector_solid_angle(camera: CodedMaskCamera) -> npt.NDArray:
     return solid_angle(xs, ys, *maskplate_physdim, d) * (camera.bulk > 0)
 
 
-def sky_variance(
+def variance(
     camera: CodedMaskCamera,
     detector: npt.NDArray,
 ) -> npt.NDArray:
@@ -540,7 +540,7 @@ def sky_variance(
     return np.clip(var_bal, a_min=1e-8, a_max=detector.sum())
 
 
-def sky_significance(
+def snratio(
     sky: npt.NDArray,
     var: npt.NDArray,
 ) -> npt.NDArray:
@@ -555,7 +555,7 @@ def sky_significance(
 
     Returns:
         output (NDArray):
-            Sky significance calculated as `sky / sqrt(variance)`.
+            Sky significance calculated as `sky / sqrt(var)`.
     """
     return sky / np.sqrt(var)
 
