@@ -365,34 +365,10 @@ def solid_angle(
     height: float,
     distance: float,
 ) -> npt.NDArray:
-    """
-    Computes the solid angle subtended by a rectangular mask, given its
-    physical width and height, as observed from a detector element
-    located at coordinates (x, y).
-
-                        |-------- width --------|
-                                |
-                         _______|_______________       _ _
-                        |       |               |       |
-                        |   4   |       3       |       |
-                        |       |               |       |
-                     ___|_______|_______________|____   |height
-                        |       |               |       |
-                        |   1  y|       2       |       |    
-                        |_______|_______________|      _|_
-                            x   |
-                                |                 
-    
-    To compute the solid angle, the plate is divided in four sub-portions,
-    with the observer located on one corner of each one. The plate solid
-    angle can be computed by averaging the sub-portions solid angles seen
-    by an on-axis observer.
-
-    The sub-rectangules have areas:
-        * `A_r1 = x * y`
-        * `A_r2 = (width - x) * y`
-        * `A_r3 = (width - x) * (height - y)`
-        * `A_r4 = x * (height - y)`
+    r"""
+    Computes the solid angle subtended by a rectangular mask at a given
+    distance, given its physical width and height, as observed from a
+    detector element located at coordinates (x, y).            
 
     Args:
         x (float | NDArray):
@@ -439,6 +415,16 @@ def solid_angle(
             f"Invalid coords (x, y). Coords must be in the range [0, {width / 2}] x [0, {height / 2}]."
         )
     
+    # To compute the solid angle, the plate is divided in four sub-portions,
+    # with the observer located on one corner of each one. The plate solid
+    # angle can be computed by averaging the sub-portions solid angles seen
+    # by an on-axis observer.
+    #
+    # The sub-rectangules have areas:
+    #    * `A_r1 = x * y`
+    #    * `A_r2 = (width - x) * y`
+    #    * `A_r3 = (width - x) * (height - y)`
+    #    * `A_r4 = x * (height - y)`
     sub_portions = (
         (x, y),
         ((width - x), y),
