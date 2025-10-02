@@ -445,10 +445,10 @@ def solid_angle(
         ((width - x), (height - y)),
         (x, (height - y)),
     )
-    Omega = tuple(
+    omega = tuple(
         on_axis_solid_angle(2 * a, 2 * b) for a, b in sub_portions
     )
-    return sum(Omega) / len(Omega)
+    return sum(omega) / len(omega)
 
 
 def detector_solid_angle(camera: CodedMaskCamera) -> npt.NDArray:
@@ -475,8 +475,6 @@ def detector_solid_angle(camera: CodedMaskCamera) -> npt.NDArray:
         - CFR with:
             * https://github.com/yuri-evangelista/CodedMasks/blob/26a5bb2fa08e37c645f85d55a3a1ef038fe7497d/mask_utils/imaging_utils.py#L104
     """
-    UPX, UPY = camera.upscale_f
-
     # define mask physical dim (width, height)
     d = camera.specs.mask_detector_distance
     maxx, minx = camera.specs.mask_maxx, camera.specs.mask_minx
@@ -489,12 +487,12 @@ def detector_solid_angle(camera: CodedMaskCamera) -> npt.NDArray:
     #   - the solid angle is masked with the bulk active elements
     _binsx, _binsy = camera.bins_detector
     centers_x, centers_y = (
-        _binsx[:-1] + camera.specs.mask_deltax / (2 * UPX),
-        _binsy[:-1] + camera.specs.mask_deltay / (2 * UPY),
+        _binsx[:-1] + camera.specs.mask_deltax / (2 * camera.upscale_f.x),
+        _binsy[:-1] + camera.specs.mask_deltay / (2 * camera.upscale_f.y),
     )
-    x = np.clip(maxx - np.abs(centers_x[np.newaxis, :]), a_min=0, a_max=None)
-    y = np.clip(maxy - np.abs(centers_y[:, np.newaxis]), a_min=0, a_max=None)
-    return solid_angle(x, y, *maskplate_physdim, d) * (camera.bulk > 0)
+    xs = np.clip(maxx - np.abs(centers_x[np.newaxis, :]), a_min=0, a_max=None)
+    ys = np.clip(maxy - np.abs(centers_y[:, np.newaxis]), a_min=0, a_max=None)
+    return solid_angle(xs, ys, *maskplate_physdim, d) * (camera.bulk > 0)
 
 
 def sky_variance(
@@ -525,16 +523,16 @@ def sky_variance(
     sum_det, sum_bulk = map(np.sum, (detector, camera.bulk))
 
     # compute expected counts for the detector image
-    # - the expected counts array `Lambda` can be built as the product between
-    #   a normalised matrix `Omega` representing the solid angle seen by each
+    # - the expected counts array `lambda` can be built as the product between
+    #   a normalised matrix `omega` representing the solid angle seen by each
     #   active pixel; and the total observed detector counts (i.e., `sum_det`)
-    Omega = detector_solid_angle(camera)
-    Lambda = sum_det * Omega / Omega.sum()
+    omega = detector_solid_angle(camera)
+    lambda_ = sum_det * omega / omega.sum()
 
     # balanced variance components
-    var = correlate(np.square(camera.decoder), Lambda, mode="full")
+    var = correlate(np.square(camera.decoder), lambda_, mode="full")
     bal = np.square(camera.balancing) * sum_det / np.square(sum_bulk)
-    covar = correlate(camera.decoder, Lambda, mode="full")
+    covar = correlate(camera.decoder, lambda_, mode="full")
 
     var_bal = (
         var + bal - 2 * covar * camera.balancing / sum_bulk
