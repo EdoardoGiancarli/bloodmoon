@@ -365,24 +365,23 @@ def solid_angle(
     height: float,
     distance: float,
 ) -> npt.NDArray:
-    r"""
-    Computes the solid angle subtended by a rectangular mask at a given
-    distance, given its physical width and height, as observed from a
-    detector element located at coordinates (x, y).            
+    """
+    Computes the solid angle subtended by a rectangular mask at a given distance from the detector, 
+    as seen from a point (x, y) of the detector plane. 
 
     Args:
         x (float | NDArray):
-            Observer coord along the x-axis wrt plate bottom-left corner.
+            Detector element position over the x-axis wrt mask bottom-left corner.
             A non-zero solid angle requires that `0 <= x <= width / 2`.
         y (float | NDArray):
-            Observer coord along the y-axis wrt plate bottom-left corner.
+            Detector element position over the y-axis wrt mask bottom-left corner.
             A non-zero solid angle requires that `0 <= y <= height / 2`.
         width (float):
-            Width of the rectangular plate.
+            Mask width.
         height (float):
-            Height of the rectangular plate.
+            Mask height.
         distance (float):
-            Distance between the plate and the observer.
+            Distance between the plate and the detector.
 
     Returns:
         output (float | NDArray):
@@ -392,7 +391,7 @@ def solid_angle(
         ValueError: If input coords (x, y) not in the range [0, width / 2] x [0, height / 2].
 
     ## Notes
-        - CFR with:
+        - See also:
             * https://github.com/yuri-evangelista/CodedMasks/blob/26a5bb2fa08e37c645f85d55a3a1ef038fe7497d/mask_utils/imaging_utils.py#L58
             * https://vixra.org/pdf/2001.0603v2.pdf [Eq. 27, 34]
     """
@@ -439,16 +438,9 @@ def solid_angle(
 
 def solid_angle_profile(camera: CodedMaskCamera) -> npt.NDArray:
     """
-    Computes the sky solid angle profile seen by each active element
-    of the coded-mask camera detector.
-
-    The solid angle is computed by considering only the instrument
-    geometry, taking into account the mask physical dimension, which
-    represents the base of a pyramid whose vertex sits on the center
-    of each active element of the detector plane, and all the active
-    elements coordinates (along the plane).
-    The final array is masked with the detector bulk profile.
-
+    Computes the solid angle subtended by a rectangular mask at a given distance from the detector, 
+    relative to the center of each active element of the detector. 
+    
     Args:
         camera (CodedMaskCamera):
             Camera instance containing the system geometry info.
@@ -458,8 +450,7 @@ def solid_angle_profile(camera: CodedMaskCamera) -> npt.NDArray:
             2D array representing the solid angle profile.
     
     ## Notes:
-        - CFR with:
-            * https://github.com/yuri-evangelista/CodedMasks/blob/26a5bb2fa08e37c645f85d55a3a1ef038fe7497d/mask_utils/imaging_utils.py#L104
+        - See also `solid_angle`
     """
     # define mask physical dim (width, height)
     d = camera.specs.mask_detector_distance
@@ -486,8 +477,7 @@ def variance(
     detector: npt.NDArray,
 ) -> npt.NDArray:
     """
-    Reconstructs balanced sky variance from detector image by using
-    the expected photon counts, to neglect Poisson fluctuations.
+    Reconstructs balanced sky variance from detector image.
 
     Args:
         camera (CodedMaskCamera):
@@ -498,11 +488,10 @@ def variance(
     Returns:
         output (NDArray):
             Balanced variance map of the reconstructed sky image.
-            To conserve the observed total counts, the output array
-            is clipped in the range `[1e-8, detector.sum()]`.
+            To conserve the observed total counts, the output array is clipped in the range `[1e-8, detector.sum()]`.
     
     ## Notes:
-        - CFR with:
+        - See also:
             * https://github.com/yuri-evangelista/CodedMasks/blob/26a5bb2fa08e37c645f85d55a3a1ef038fe7497d/mask_utils/imaging_utils.py#L134
     """
     # retrieve total detector counts and total active elements
@@ -520,9 +509,7 @@ def variance(
     bal = np.square(camera.balancing) * sum_det / np.square(sum_bulk)
     covar = correlate(camera.decoder, lambda_, mode="full")
 
-    var_bal = (
-        var + bal - 2 * covar * camera.balancing / sum_bulk
-    )
+    var_bal = var + bal - 2 * covar * camera.balancing / sum_bulk
     return np.clip(var_bal, a_min=1e-8, a_max=detector.sum())
 
 
