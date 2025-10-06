@@ -19,10 +19,10 @@ count : Function
 decode : Function
     Reconstructs sky images using balanced cross-correlation
 
-sky_variance : Function
+variance : Function
     Computes balanced sky image variance
 
-sky_significance : Function
+snratio : Function
     Computes balanced sky image signal-to-noise ratio
 
 model_shadowgram : Function
