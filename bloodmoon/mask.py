@@ -488,7 +488,6 @@ def variance(
     Returns:
         output (NDArray):
             Balanced variance map of the reconstructed sky image.
-            To conserve the observed total counts, the output array is clipped in the range `[1e-8, detector.sum()]`.
     
     ## Notes:
         - See also:
@@ -509,8 +508,7 @@ def variance(
     bal = np.square(camera.balancing) * sum_det / np.square(sum_bulk)
     covar = correlate(camera.decoder, lambda_, mode="full")
 
-    var_bal = var + bal - 2 * covar * camera.balancing / sum_bulk
-    return np.clip(var_bal, a_min=1e-8, a_max=detector.sum())
+    return var + bal - 2 * covar * camera.balancing / sum_bulk
 
 
 def snratio(
@@ -518,19 +516,22 @@ def snratio(
     var: npt.NDArray,
 ) -> npt.NDArray:
     """
-    Computes signal-to-noise ratio from sky signal and variance arrays.
+    Calculate signal-to-noise ratio from sky signal and variance arrays.
 
     Args:
-        sky (NDArray):
-            Sky signal values.
-        var (NDArray):
-            Sky variance values.
+        sky: Array containing sky signal values.
+        var: Array containing variance values. Negative values are clipped to 0.
 
     Returns:
-        output (NDArray):
-            Sky significance calculated as `sky / sqrt(var)`.
+        NDArray: Signal-to-noise ratio calculated as sky/sqrt(variance).
+
+    Notes:
+        - Variance's boundary frames with elements close to zero are replaced with infinity.
+        - Variance's minimum is clipped at 0 if any negative value are present in the array.
     """
-    return sky / np.sqrt(var)
+    variance_clipped = np.clip(var, a_min=0.0, a_max=None) if np.any(var < 0) else var
+    variance_unframed = _unframe(variance_clipped, value=np.inf)
+    return sky / np.sqrt(variance_unframed)
 
 
 def psf(camera: CodedMaskCamera) -> npt.NDArray:
