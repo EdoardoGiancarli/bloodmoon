@@ -7,9 +7,9 @@ This module provides algorithms for:
 - Two-stage combined direction/flux estimation
 - Model fitting with instrumental effects
 """
-
+from bisect import bisect
 from functools import lru_cache
-from typing import Callable, Iterable, Literal
+from typing import Callable, Iterable, Literal, OrderedDict
 import warnings
 
 from numpy import typing as npt
@@ -173,7 +173,8 @@ def model_shadowgram(
     shift_y: float,
     vignetting: bool = True,
     psfy: bool = True,
-    normalize = True,
+    normalize: bool = True,
+    interp: bool = True,
 ) -> npt.NDArray:
     """
     Generates a normalized shadowgram for a point source.
@@ -190,6 +191,7 @@ def model_shadowgram(
         vignetting: simulates vignetting effects
         psfy: simulates detector reconstruction effects
         normalize: normalize shadowgram sum to 1
+        interp: applies rbilinear interpolation for fractional shifts
 
     Returns:
         2D array representing the modeled detector image from the source
@@ -221,7 +223,12 @@ def model_shadowgram(
         return mask_maybe_vignetted_maybe_psfy
 
     # relative component map
-    components = _rbilinear(shift_x, shift_y, camera.bins_sky.x, camera.bins_sky.y)
+    if interp:
+        components = _rbilinear(shift_x, shift_y, camera.bins_sky.x, camera.bins_sky.y)
+    else:
+        c_i, c_j = (bisect(camera.bins_sky.y, shift_y) - 1), bisect(camera.bins_sky.x, shift_x) - 1
+        components = OrderedDict([((c_i, c_j), 1.0)])
+
     n, m = camera.shape_sky
     detector = np.zeros(camera.shape_detector)
     i_min, i_max, j_min, j_max = _detector_footprint_cached(camera)
