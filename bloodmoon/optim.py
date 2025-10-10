@@ -7,6 +7,7 @@ This module provides algorithms for:
 - Two-stage combined direction/flux estimation
 - Model fitting with instrumental effects
 """
+
 from bisect import bisect
 from functools import lru_cache
 from typing import Callable, Iterable, Literal, OrderedDict
@@ -29,8 +30,8 @@ from .mask import count
 from .mask import cutout
 from .mask import decode
 from .mask import interpmax
-from .mask import variance
 from .mask import snratio
+from .mask import variance
 
 
 def _modsech(
@@ -275,7 +276,13 @@ def model_sky(
     Notes:
         - For optimization, consider using the dedicated, cached function of `optim.py`
     """
-    return decode(camera, model_shadowgram(camera, shift_x, shift_y, vignetting=vignetting, psfy=psfy)) * fluence
+    return (
+        decode(
+            camera,
+            model_shadowgram(camera, shift_x, shift_y, vignetting=vignetting, psfy=psfy),
+        )
+        * fluence
+    )
 
 
 def _ModelFluence(  # noqa
@@ -507,7 +514,12 @@ def _Loss(model_f: Callable) -> Callable:  # noqa
             - truth is the observed sky image
     """
 
-    def f(args: npt.NDArray, truth: npt.NDArray, pos: tuple[int, int], camera: CodedMaskCamera) -> float:
+    def f(
+        args: npt.NDArray,
+        truth: npt.NDArray,
+        pos: tuple[int, int],
+        camera: CodedMaskCamera,
+    ) -> float:
         """
         Compute MSE loss between model prediction and truth.
 
@@ -863,9 +875,7 @@ def iros(
         # variance is clipped to improve numerical stability for off-axis sources,
         # which may result in very few counts.
         # TODO: improve on this only sorting matrix elements over a threshold.
-        snrs = tuple(
-            snratio(sky, np.clip(var_, a_min=1, a_max=None)) for sky, var_ in zip(skymaps, varmaps)
-        )
+        snrs = tuple(snratio(sky, np.clip(var_, a_min=1, a_max=None)) for sky, var_ in zip(skymaps, varmaps))
         return snrs
 
     detectors = tuple(count(camera, sdl.data)[0] for sdl in sdls)

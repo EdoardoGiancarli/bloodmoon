@@ -15,11 +15,24 @@ class TestOptimizer(unittest.TestCase):
         self.wfm = codedmask(_path_test_mask)
 
     def generate_source_and_measure_localization(
-        self, sx_true, sy_true, vignetting, psfy, model: Literal["fast", "accurate"], tolerance: Literal["zero", "slit"]
+        self,
+        sx_true,
+        sy_true,
+        vignetting,
+        psfy,
+        model: Literal["fast", "accurate"],
+        tolerance: Literal["zero", "slit"],
     ):
         i_true, j_true = shift2pos(self.wfm, sx_true, sy_true)
         sg = model_sky(self.wfm, sx_true, sy_true, fluence=1, vignetting=vignetting, psfy=psfy)
-        sx_meas, sy_meas, f = optimize(self.wfm, sg, (i_true, j_true), vignetting=vignetting, psfy=psfy, model=model)
+        sx_meas, sy_meas, f = optimize(
+            self.wfm,
+            sg,
+            (i_true, j_true),
+            vignetting=vignetting,
+            psfy=psfy,
+            model=model,
+        )
         if tolerance == "slit":
             self.assertTrue(abs(sx_meas - sx_true) < self.wfm.mdl["slit_deltax"] / self.wfm.upscale_f.x)
             self.assertTrue(abs(sx_meas - sx_true) < self.wfm.mdl["slit_deltay"] / self.wfm.upscale_f.y)

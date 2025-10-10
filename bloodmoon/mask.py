@@ -151,7 +151,6 @@ class CodedMaskCamera:
         # there is no need for this since we can just `mask.shape` but since we have the other already..
         return len(self.bins_mask.y) - 1, len(self.bins_mask.x) - 1
 
-
     @cached_property
     def shape_sky(self) -> tuple[int, int]:
         """Shape of the reconstructed sky image (rows, columns)."""
@@ -366,8 +365,8 @@ def solid_angle(
     distance: float,
 ) -> npt.NDArray:
     """
-    Computes the solid angle subtended by a rectangular mask at a given distance from the detector, 
-    as seen from a point (x, y) of the detector plane. 
+    Computes the solid angle subtended by a rectangular mask at a given distance from the detector,
+    as seen from a point (x, y) of the detector plane.
 
     Args:
         x (float | NDArray):
@@ -386,7 +385,7 @@ def solid_angle(
     Returns:
         output (float | NDArray):
             Solid angle on the plate seen by the observer.
-    
+
     Raises:
         ValueError: If input coords (x, y) not in the range [0, width / 2] x [0, height / 2].
 
@@ -395,6 +394,7 @@ def solid_angle(
             * https://github.com/yuri-evangelista/CodedMasks/blob/26a5bb2fa08e37c645f85d55a3a1ef038fe7497d/mask_utils/imaging_utils.py#L58
             * https://vixra.org/pdf/2001.0603v2.pdf [Eq. 27, 34]
     """
+
     def on_axis_solid_angle(
         a: float | npt.NDArray,
         b: float | npt.NDArray,
@@ -406,14 +406,10 @@ def solid_angle(
         alpha = a / (2 * distance)
         beta = b / (2 * distance)
         return 4 * np.arctan((alpha * beta) / np.sqrt(1 + alpha**2 + beta**2))
-    
-    if (
-        np.any((x < 0) | (x > width / 2) | (y < 0) | (y > height / 2))
-    ):
-        raise ValueError(
-            f"Invalid coords (x, y). Coords must be in the range [0, {width / 2}] x [0, {height / 2}]."
-        )
-    
+
+    if np.any((x < 0) | (x > width / 2) | (y < 0) | (y > height / 2)):
+        raise ValueError(f"Invalid coords (x, y). Coords must be in the range [0, {width / 2}] x [0, {height / 2}].")
+
     # To compute the solid angle, the plate is divided in four sub-portions,
     # with the observer located on one corner of each one. The plate solid
     # angle can be computed by averaging the sub-portions solid angles seen
@@ -430,25 +426,23 @@ def solid_angle(
         ((width - x), (height - y)),
         (x, (height - y)),
     )
-    omega = tuple(
-        on_axis_solid_angle(2 * a, 2 * b) for a, b in sub_portions
-    )
+    omega = tuple(on_axis_solid_angle(2 * a, 2 * b) for a, b in sub_portions)
     return sum(omega) / len(omega)
 
 
 def solid_angle_profile(camera: CodedMaskCamera) -> npt.NDArray:
     """
-    Computes the solid angle subtended by a rectangular mask at a given distance from the detector, 
-    relative to the center of each active element of the detector. 
-    
+    Computes the solid angle subtended by a rectangular mask at a given distance from the detector,
+    relative to the center of each active element of the detector.
+
     Args:
         camera (CodedMaskCamera):
             Camera instance containing the system geometry info.
-    
+
     Returns:
         output (NDArray):
             2D array representing the solid angle profile.
-    
+
     ## Notes:
         - See also `solid_angle`
     """
@@ -488,7 +482,7 @@ def variance(
     Returns:
         output (NDArray):
             Balanced variance map of the reconstructed sky image.
-    
+
     ## Notes:
         - See also:
             * https://github.com/yuri-evangelista/CodedMasks/blob/26a5bb2fa08e37c645f85d55a3a1ef038fe7497d/mask_utils/imaging_utils.py#L134
