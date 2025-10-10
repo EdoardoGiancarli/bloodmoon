@@ -488,7 +488,10 @@ def _erosion(
         * See tests for usage examples.
     """
     if not np.issubdtype(arr.dtype, np.integer):
-        raise ValueError("Input array must be of integer type.")
+        raise ValueError(
+            "Input array must be of integer type. "
+            "Hint: make sure that 1. your mask dtype is integer, and 2. it only contains ones and zeros."
+        )
 
     # number of bins to cut
     ncuts = int(cut / step)

@@ -173,6 +173,7 @@ def model_shadowgram(
     shift_y: float,
     vignetting: bool = True,
     psfy: bool = True,
+    normalize = True,
 ) -> npt.NDArray:
     """
     Generates a normalized shadowgram for a point source.
@@ -188,6 +189,7 @@ def model_shadowgram(
         camera: CodedMaskCamera instance containing all geometric parameters
         vignetting: simulates vignetting effects
         psfy: simulates detector reconstruction effects
+        normalize: normalize shadowgram sum to 1
 
     Returns:
         2D array representing the modeled detector image from the source
@@ -229,7 +231,8 @@ def model_shadowgram(
         sg = _shift(mask_p, (r, c))  # mask shifted processed
         detector += sg[i_min:i_max, j_min:j_max] * weight
     detector *= camera.bulk
-    detector /= np.sum(detector)
+    if normalize:
+        detector /= np.sum(detector)
     return detector
 
 
